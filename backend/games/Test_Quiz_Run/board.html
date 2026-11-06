@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музыкальный квиз — Test_Quiz_Run</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #06b6d4; /* Бирюзовый акцент */
+            --accent-hover: #0891b2;
+            --success-color: #10b981; /* Мятно-зеленый */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            flex-grow: 1;
+        }
+
+        @media (max-width: 968px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Сетка вопросов */
+        .board-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .track-card {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .track-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.2);
+        }
+
+        .track-card.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--bg-color);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .track-card.played {
+            opacity: 0.4;
+            border-color: var(--border-color);
+            background-color: #0f172a;
+        }
+
+        /* Панель управления */
+        .control-panel {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            height: fit-content;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 2rem;
+        }
+
+        .panel-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 4rem 2rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .track-number {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            text-transform: uppercase;
+        }
+
+        /* Кнопки Вопрос/Ответ */
+        .mode-switch {
+            display: flex;
+            background-color: var(--bg-color);
+            border-radius: 10px;
+            padding: 0.25rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem 0;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        /* Секция контента вопроса/ответа */
+        .content-area {
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            line-height: 1.6;
+            padding: 1rem;
+        }
+
+        .photo-container {
+            width: 100%;
+            height: 200px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-placeholder {
+            font-size: 3rem;
+            opacity: 0.3;
+        }
+
+        .answer-text {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--success-color);
+            margin-top: 0.5rem;
+            line-height: 1.4;
+        }
+
+        /* Управление плеером */
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        audio {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .action-btn {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 0.85rem;
+            font-size: 1rem;
+            font-weight: 800;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .action-btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .action-btn.secondary {
+            background-color: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .action-btn.secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        /* Индикатор готовности */
+        .played-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            user-select: none;
+            margin-top: 0.5rem;
+        }
+
+        .played-check input {
+            width: 1.1rem;
+            height: 1.1rem;
+            accent-color: var(--success-color);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Test_Quiz_Run</h1>
+        <div class="subtitle">Музыкальное табло угадайки</div>
+    </header>
+
+    <div class="container">
+        <!-- Сетка карточек -->
+        <div class="board-section">
+            <div class="grid" id="grid">
+                <!-- Карточки генерируются динамически -->
+            </div>
+        </div>
+
+        <!-- Управление треком -->
+        <div class="control-panel" id="control-panel">
+            <div class="panel-placeholder" id="placeholder">
+                <span style="font-size: 2.5rem; display: block; margin-bottom: 1rem;">🎵</span>
+                Выберите трек на табло, чтобы начать воспроизведение
+            </div>
+            
+            <div id="player-interface" style="display: none;">
+                <div class="player-header">
+                    <div class="track-number" id="track-num-label">Трек 1</div>
+                    <div class="played-check">
+                        <input type="checkbox" id="played-checkbox">
+                        <label for="played-checkbox">Сыгран</label>
+                    </div>
+                </div>
+
+                <div class="mode-switch">
+                    <button class="mode-btn active" id="btn-mode-q">Вопрос</button>
+                    <button class="mode-btn" id="btn-mode-a">Ответ</button>
+                </div>
+
+                <!-- Зона Вопроса -->
+                <div class="content-area" id="area-question">
+                    <div style="font-size: 4rem;">❓</div>
+                    <div class="question-text">Назовите группу (или исполнителя) и назовите песню</div>
+                </div>
+
+                <!-- Зона Ответа (скрыта по умолчанию) -->
+                <div class="content-area" id="area-answer" style="display: none;">
+                    <div class="photo-container">
+                        <img src="" alt="Фото артиста" id="artist-photo" onerror="this.style.display='none'; document.getElementById('photo-fallback').style.display='flex'">
+                        <div class="photo-placeholder" id="photo-fallback" style="display: none;">🎤</div>
+                    </div>
+                    <div class="answer-text" id="artist-answer-text">Гражданская Оборона — Собаки</div>
+                </div>
+
+                <div class="player-controls">
+                    <audio id="audio-player" controls preload="auto">
+                        <source src="" type="audio/mpeg">
+                    </audio>
+                    <button class="action-btn" id="btn-action">Показать ответ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tracks = [{"index": 1, "audio": "track1.mp3", "question": "Назовите группу (или исполнителя) и назовите трек", "answer": "Nirvana — Heart-Shaped Box", "photo": "photos/Nirvana.jpg"}, {"index": 2, "audio": "track2.mp3", "question": "Назовите группу (или исполнителя) и назовите трек", "answer": "Сплин — Мы сидели и курили", "photo": "photos/Сплин.jpg"}];
+        
+        const grid = document.getElementById('grid');
+        const placeholder = document.getElementById('placeholder');
+        const playerInterface = document.getElementById('player-interface');
+        const trackNumLabel = document.getElementById('track-num-label');
+        const playedCheckbox = document.getElementById('played-checkbox');
+        
+        const btnModeQ = document.getElementById('btn-mode-q');
+        const btnModeA = document.getElementById('btn-mode-a');
+        const areaQuestion = document.getElementById('area-question');
+        const areaAnswer = document.getElementById('area-answer');
+        const artistPhoto = document.getElementById('artist-photo');
+        const artistAnswerText = document.getElementById('artist-answer-text');
+        
+        const audioPlayer = document.getElementById('audio-player');
+        const btnAction = document.getElementById('btn-action');
+        
+        let currentTrack = null;
+
+        // Генерация карточек
+        tracks.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'track-card';
+            card.textContent = t.index;
+            card.id = `card-${t.index}`;
+            
+            card.addEventListener('click', () => selectTrack(t));
+            grid.appendChild(card);
+        });
+
+        function selectTrack(track) {
+            // Убираем активный класс со всех карточек
+            document.querySelectorAll('.track-card').forEach(c => c.classList.remove('active'));
+            
+            // Добавляем активный класс
+            const card = document.getElementById(`card-${track.index}`);
+            card.classList.add('active');
+            
+            currentTrack = track;
+            
+            // Показываем плеер
+            placeholder.style.display = 'none';
+            playerInterface.style.display = 'flex';
+            
+            trackNumLabel.textContent = `Трек ${track.index}`;
+            playedCheckbox.checked = card.classList.contains('played');
+            
+            // Сбрасываем плеер
+            audioPlayer.pause();
+            audioPlayer.src = track.audio;
+            audioPlayer.load();
+            
+            // Сбрасываем в режим Вопроса
+            showQuestionMode();
+            
+            // Автозапуск вопроса
+            audioPlayer.play().catch(e => console.log("Автозапуск заблокирован браузером"));
+        }
+
+        function showQuestionMode() {
+            btnModeQ.classList.add('active');
+            btnModeA.classList.remove('active');
+            areaQuestion.style.display = 'flex';
+            areaAnswer.style.display = 'none';
+            btnAction.textContent = 'Показать ответ';
+            btnAction.style.backgroundColor = 'var(--accent-color)';
+        }
+
+        function showAnswerMode() {
+            btnModeQ.classList.remove('active');
+            btnModeA.classList.add('active');
+            areaQuestion.style.display = 'none';
+            areaAnswer.style.display = 'flex';
+            btnAction.textContent = 'Следующий трек';
+            btnAction.style.backgroundColor = 'var(--success-color)';
+            
+            // Настройка ответа
+            artistAnswerText.textContent = currentTrack.answer;
+            if (currentTrack.photo) {
+                document.getElementById('photo-fallback').style.display = 'none';
+                artistPhoto.style.display = 'block';
+                artistPhoto.src = currentTrack.photo;
+            } else {
+                artistPhoto.style.display = 'none';
+                document.getElementById('photo-fallback').style.display = 'flex';
+            }
+            
+            // Воспроизводим трек снова
+            audioPlayer.currentTime = 0;
+            audioPlayer.play().catch(e => console.log("Ошибка автозапуска ответа"));
+        }
+
+        // Обработка кнопки переключения режимов
+        btnModeQ.addEventListener('click', showQuestionMode);
+        btnModeA.addEventListener('click', showAnswerMode);
+
+        // Кнопка действия (Показать ответ / Следующий)
+        btnAction.addEventListener('click', () => {
+            if (btnModeQ.classList.contains('active')) {
+                showAnswerMode();
+            } else {
+                // Помечаем текущий как сыгранный
+                if (currentTrack) {
+                    const card = document.getElementById(`card-${currentTrack.index}`);
+                    card.classList.add('played');
+                    playedCheckbox.checked = true;
+                    
+                    // Переходим к следующему
+                    const nextIndex = currentTrack.index; // в массиве это индекс nextIndex
+                    if (nextIndex < tracks.length) {
+                        selectTrack(tracks[nextIndex]);
+                    } else {
+                        // Квиз окончен
+                        audioPlayer.pause();
+                        placeholder.style.display = 'flex';
+                        playerInterface.style.display = 'none';
+                        document.querySelectorAll('.track-card').forEach(c => c.classList.remove('active'));
+                        alert('🎉 Квиз завершен! Все треки сыграны.');
+                    }
+                }
+            }
+        });
+
+        // Обработка чекбокса "Сыгран"
+        playedCheckbox.addEventListener('change', () => {
+            if (currentTrack) {
+                const card = document.getElementById(`card-${currentTrack.index}`);
+                if (playedCheckbox.checked) {
+                    card.classList.add('played');
+                } else {
+                    card.classList.remove('played');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

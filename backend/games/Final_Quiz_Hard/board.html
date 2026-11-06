@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музыкальный квиз — Final_Quiz_Hard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #06b6d4; /* Бирюзовый */
+            --accent-hover: #0891b2;
+            --success-color: #10b981; /* Мятно-зеленый */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --card-played: #090d16;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 1.5rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-main);
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            font-weight: 600;
+        }
+
+        /* Основной контейнер на весь экран */
+        .app-container {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 1.5rem;
+            flex-grow: 1;
+            min-height: 0; /* Важно для скролла в CSS Grid */
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            body {
+                overflow: auto;
+                height: auto;
+            }
+            .app-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        /* Левая панель - Сетка треков */
+        .board-section {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            background-color: rgba(30, 41, 59, 0.3);
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            padding: 1.5rem;
+        }
+
+        .board-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .board-scroll {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        /* Стилизация скроллбара */
+        .board-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .board-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .board-scroll::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        .board-scroll::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+        }
+
+        .track-card {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .track-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -3px rgba(6, 182, 212, 0.25);
+        }
+
+        .track-card.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--bg-color);
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.5);
+        }
+
+        .track-card.played {
+            opacity: 0.5;
+            border-color: var(--border-color);
+            background-color: var(--card-played);
+            color: var(--text-muted);
+        }
+
+        /* Правая панель - Консоль управления */
+        .control-panel {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.3);
+            min-height: 0;
+        }
+
+        .panel-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-muted);
+            flex-grow: 1;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .player-interface {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+            gap: 1.25rem;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .track-number {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .played-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.95rem;
+            user-select: none;
+        }
+
+        .played-check input {
+            width: 1.2rem;
+            height: 1.2rem;
+            accent-color: var(--success-color);
+            cursor: pointer;
+        }
+
+        /* Переключатель Вопрос/Ответ */
+        .mode-switch {
+            display: flex;
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            padding: 0.25rem;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.65rem 0;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mode-btn.active {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        /* Зона вывода контента (Вопрос/Ответ) */
+        .content-area {
+            flex-grow: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: rgba(15, 23, 42, 0.4);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+        }
+
+        .question-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        .photo-container {
+            width: 100%;
+            height: 280px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-placeholder {
+            font-size: 4rem;
+            opacity: 0.25;
+        }
+
+        .answer-text {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--success-color);
+            line-height: 1.4;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Панель плеера */
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+
+        audio {
+            width: 100%;
+            border-radius: 12px;
+            outline: none;
+        }
+
+        .action-btn {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 900;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.2);
+        }
+
+        .action-btn:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Final_Quiz_Hard</h1>
+        <div class="subtitle">Музыкальное табло угадайки</div>
+    </header>
+
+    <div class="app-container">
+        <!-- Сетка карточек -->
+        <div class="board-section">
+            <div class="board-title">
+                <span>Вопросы игры</span>
+                <span id="progress-text" style="font-size: 0.9rem; font-weight: 600;">сыграно: 0 / 15</span>
+            </div>
+            <div class="board-scroll">
+                <div class="grid" id="grid">
+                    <!-- Карточки генерируются динамически -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Управление треком -->
+        <div class="control-panel" id="control-panel">
+            <div class="panel-placeholder" id="placeholder">
+                <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">🎵</span>
+                <span>Выберите номер вопроса на табло,<br>чтобы запустить раунд</span>
+            </div>
+            
+            <div class="player-interface" id="player-interface" style="display: none;">
+                <div class="player-header">
+                    <div class="track-number" id="track-num-label">Трек 1</div>
+                    <div class="played-check">
+                        <input type="checkbox" id="played-checkbox">
+                        <label for="played-checkbox">Сыгран</label>
+                    </div>
+                </div>
+
+                <div class="mode-switch">
+                    <button class="mode-btn active" id="btn-mode-q">Вопрос</button>
+                    <button class="mode-btn" id="btn-mode-a">Ответ</button>
+                </div>
+
+                <!-- Зона Вопроса -->
+                <div class="content-area" id="area-question">
+                    <div class="question-box">
+                        <div style="font-size: 5rem;">❓</div>
+                        <div class="question-text" id="question-text">Назовите группу и название трека</div>
+                    </div>
+                </div>
+
+                <!-- Зона Ответа (скрыта по умолчанию) -->
+                <div class="content-area" id="area-answer" style="display: none;">
+                    <div style="width: 100%;">
+                        <div class="photo-container">
+                            <img src="" alt="Фото артиста" id="artist-photo" onerror="this.style.display='none'; document.getElementById('photo-fallback').style.display='flex'">
+                            <div class="photo-placeholder" id="photo-fallback" style="display: none;">🎤</div>
+                        </div>
+                        <div class="answer-text" id="artist-answer-text">Артист — Песня</div>
+                    </div>
+                </div>
+
+                <div class="player-controls">
+                    <audio id="audio-player" controls preload="auto">
+                        <source src="" type="audio/mpeg">
+                    </audio>
+                    <button class="action-btn" id="btn-action">Показать ответ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tracks = [{"index": 1, "audio": "track1.mp3", "question": "Назовите группу и название трека", "answer": "ДДТ — Четыре окна", "photo": "photos/ДДТ.jpg"}, {"index": 2, "audio": "track2.mp3", "question": "Назовите исполнителя и название трека", "answer": "Michael Jackson — Love Never Felt So Good", "photo": "photos/Michael_Jackson.jpg"}, {"index": 3, "audio": "track3.mp3", "question": "Назовите группу и название трека", "answer": "Rammstein — Amerika", "photo": "photos/Rammstein.jpg"}, {"index": 4, "audio": "track4.mp3", "question": "Назовите группу и название трека", "answer": "Би-2 — Философский камень", "photo": "photos/Би-2.jpg"}, {"index": 5, "audio": "track5.mp3", "question": "Назовите группу и название трека", "answer": "Coldplay — Shiver", "photo": "photos/Coldplay.jpg"}, {"index": 6, "audio": "track6.mp3", "question": "Назовите группу и название трека", "answer": "The Beatles — I Want To Hold Your Hand - Remastered 2015", "photo": "photos/The_Beatles.jpg"}, {"index": 7, "audio": "track7.mp3", "question": "Назовите группу и название трека", "answer": "Nirvana — Stay Away", "photo": "photos/Nirvana.jpg"}, {"index": 8, "audio": "track8.mp3", "question": "Назовите группу и название трека", "answer": "Ария — Химера", "photo": "photos/Ария.jpg"}, {"index": 9, "audio": "track9.mp3", "question": "Назовите группу и название трека", "answer": "Queen — Cool Cat - Remastered 2011", "photo": "photos/Queen.jpg"}, {"index": 10, "audio": "track10.mp3", "question": "Назовите исполнителя и название трека", "answer": "Billie Eilish — LUNCH", "photo": "photos/Billie_Eilish.jpg"}, {"index": 11, "audio": "track11.mp3", "question": "Назовите группу и название трека", "answer": "Сплин — Мы сидели и курили", "photo": "photos/Сплин.jpg"}, {"index": 12, "audio": "track12.mp3", "question": "Назовите исполнителя и название трека", "answer": "Баста — Где ты теперь и с кем", "photo": "photos/Баста.jpg"}, {"index": 13, "audio": "track13.mp3", "question": "Назовите группу и название трека", "answer": "AC/DC — Let There Be Rock", "photo": "photos/AC_DC.jpg"}, {"index": 14, "audio": "track14.mp3", "question": "Назовите исполнителя и название трека", "answer": "Eminem — Just Lose It", "photo": "photos/Eminem.jpg"}, {"index": 15, "audio": "track15.mp3", "question": "Назовите исполнителя и название трека", "answer": "Земфира — СИГАРЕТЫ", "photo": "photos/Земфира.jpg"}];
+        
+        const grid = document.getElementById('grid');
+        const placeholder = document.getElementById('placeholder');
+        const playerInterface = document.getElementById('player-interface');
+        const trackNumLabel = document.getElementById('track-num-label');
+        const playedCheckbox = document.getElementById('played-checkbox');
+        const progressText = document.getElementById('progress-text');
+        
+        const btnModeQ = document.getElementById('btn-mode-q');
+        const btnModeA = document.getElementById('btn-mode-a');
+        const areaQuestion = document.getElementById('area-question');
+        const areaAnswer = document.getElementById('area-answer');
+        const artistPhoto = document.getElementById('artist-photo');
+        const artistAnswerText = document.getElementById('artist-answer-text');
+        
+        const audioPlayer = document.getElementById('audio-player');
+        const btnAction = document.getElementById('btn-action');
+        
+        let currentTrack = null;
+
+        // Генерация карточек
+        tracks.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'track-card';
+            card.textContent = t.index;
+            card.id = `card-${t.index}`;
+            
+            card.addEventListener('click', () => selectTrack(t));
+            grid.appendChild(card);
+        });
+
+        function updateProgress() {
+            const playedCount = document.querySelectorAll('.track-card.played').length;
+            if (progressText) {
+                progressText.textContent = `сыграно: ${playedCount} / ${tracks.length}`;
+            }
+        }
+
+        function selectTrack(track) {
+            // Убираем активный класс со всех карточек
+            document.querySelectorAll('.track-card').forEach(c => c.classList.remove('active'));
+            
+            // Добавляем активный класс
+            const card = document.getElementById(`card-${track.index}`);
+            card.classList.add('active');
+            
+            currentTrack = track;
+            
+            // Показываем плеер
+            placeholder.style.display = 'none';
+            playerInterface.style.display = 'flex';
+            
+            trackNumLabel.textContent = `Трек ${track.index}`;
+            playedCheckbox.checked = card.classList.contains('played');
+            
+            // Сбрасываем плеер
+            audioPlayer.pause();
+            audioPlayer.src = track.audio;
+            audioPlayer.load();
+            
+            // Сбрасываем в режим Вопроса
+            showQuestionMode();
+            
+            // Автозапуск вопроса
+            audioPlayer.play().catch(e => console.log("Автозапуск заблокирован браузером"));
+        }
+
+        function showQuestionMode() {
+            btnModeQ.classList.add('active');
+            btnModeA.classList.remove('active');
+            areaQuestion.style.display = 'flex';
+            areaAnswer.style.display = 'none';
+            btnAction.textContent = 'Показать ответ';
+            btnAction.style.backgroundColor = 'var(--accent-color)';
+            
+            // Устанавливаем индивидуальный текст вопроса
+            const qEl = document.getElementById('question-text');
+            if (qEl && currentTrack) {
+                qEl.textContent = currentTrack.question || "Назовите группу и название трека";
+            }
+        }
+
+        function showAnswerMode() {
+            btnModeQ.classList.remove('active');
+            btnModeA.classList.add('active');
+            areaQuestion.style.display = 'none';
+            areaAnswer.style.display = 'flex';
+            btnAction.textContent = 'Следующий трек';
+            btnAction.style.backgroundColor = 'var(--success-color)';
+            
+            // Настройка ответа
+            artistAnswerText.textContent = currentTrack.answer;
+            if (currentTrack.photo) {
+                document.getElementById('photo-fallback').style.display = 'none';
+                artistPhoto.style.display = 'block';
+                artistPhoto.src = currentTrack.photo;
+            } else {
+                artistPhoto.style.display = 'none';
+                document.getElementById('photo-fallback').style.display = 'flex';
+            }
+            
+            // Воспроизводим трек снова
+            audioPlayer.currentTime = 0;
+            audioPlayer.play().catch(e => console.log("Ошибка автозапуска ответа"));
+        }
+
+        // Обработка кнопки переключения режимов
+        btnModeQ.addEventListener('click', showQuestionMode);
+        btnModeA.addEventListener('click', showAnswerMode);
+
+        // Кнопка действия (Показать ответ / Следующий)
+        btnAction.addEventListener('click', () => {
+            if (btnModeQ.classList.contains('active')) {
+                showAnswerMode();
+            } else {
+                // Помечаем текущий как сыгранный
+                if (currentTrack) {
+                    const card = document.getElementById(`card-${currentTrack.index}`);
+                    card.classList.add('played');
+                    playedCheckbox.checked = true;
+                    updateProgress();
+                    
+                    // Переходим к следующему
+                    const nextIndex = currentTrack.index; // в массиве это индекс nextIndex
+                    if (nextIndex < tracks.length) {
+                        selectTrack(tracks[nextIndex]);
+                    } else {
+                        // Квиз окончен
+                        audioPlayer.pause();
+                        placeholder.style.display = 'flex';
+                        playerInterface.style.display = 'none';
+                        document.querySelectorAll('.track-card').forEach(c => c.classList.remove('active'));
+                        alert('🎉 Квиз завершен! Все треки сыграны.');
+                    }
+                }
+            }
+        });
+
+        // Обработка чекбокса "Сыгран"
+        playedCheckbox.addEventListener('change', () => {
+            if (currentTrack) {
+                const card = document.getElementById(`card-${currentTrack.index}`);
+                if (playedCheckbox.checked) {
+                    card.classList.add('played');
+                } else {
+                    card.classList.remove('played');
+                }
+                updateProgress();
+            }
+        });
+    </script>
+</body>
+</html>

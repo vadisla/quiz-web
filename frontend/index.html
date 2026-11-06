@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Quiz Live 🎵</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+        <div class="logo-area">
+            <span class="logo-icon">🎵</span>
+            <span class="logo-text">Music Quiz <span>Live</span></span>
+        </div>
+        <div class="header-controls">
+            <div id="connection-badge" class="badge badge-warning">Подключение к API...</div>
+            <button id="api-config-btn" class="btn-icon" title="Настройки API">⚙️</button>
+        </div>
+    </header>
+
+    <!-- Modal for API Configuration -->
+    <div id="api-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Настройки подключения</h3>
+            <p class="modal-hint">Укажите адрес бэкенда Railway или оставьте локальный адрес:</p>
+            <input type="text" id="api-url-input" placeholder="http://localhost:8000 или https://...up.railway.app">
+            <div class="modal-actions">
+                <button id="save-api-btn" class="btn btn-primary">Сохранить</button>
+                <button id="close-modal-btn" class="btn btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="app-container">
+        
+        <!-- VIEW 1: LOBBY (Quiz Selection) -->
+        <section id="lobby-view" class="view-section">
+            <div class="lobby-header">
+                <h2>Выберите игру для проведения</h2>
+                <p>Все игры загружаются напрямую из облачной базы данных на Railway</p>
+            </div>
+            
+            <div id="quiz-list" class="quiz-grid">
+                <!-- Dynamically loaded cards -->
+                <div class="loading-spinner">Загрузка списка квизов...</div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: GAME BOARD -->
+        <section id="game-view" class="view-section hidden">
+            <!-- Game Top Bar -->
+            <div class="game-header">
+                <button id="back-to-lobby-btn" class="btn btn-secondary">← В лобби</button>
+                <div class="game-info">
+                    <h2 id="current-quiz-title">Название игры</h2>
+                    <span id="game-progress" class="progress-pill">Трек 1 из 20</span>
+                </div>
+                <button id="reset-game-btn" class="btn btn-secondary" title="Сбросить сыгранные треки">🔄 Сброс</button>
+            </div>
+
+            <!-- Central Game Stage -->
+            <div class="stage-container">
+                <!-- Question Card -->
+                <div id="question-card" class="stage-card">
+                    <div class="card-tag">РАУНД / ВОПРОС</div>
+                    <div id="question-text" class="question-title">Нажмите на номер трека внизу</div>
+                    
+                    <!-- Vinyl / Pulse Visualizer -->
+                    <div id="vinyl-wrapper" class="vinyl-wrapper">
+                        <div id="vinyl-disc" class="vinyl-disc">
+                            <div class="vinyl-center">🎵</div>
+                        </div>
+                    </div>
+
+                    <!-- Audio Progress & Timer -->
+                    <div class="audio-controls">
+                        <div class="timer-display"><span id="timer-count">20</span> сек</div>
+                        <div class="progress-bar-bg">
+                            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                        </div>
+                        <div class="control-buttons">
+                            <button id="play-pause-btn" class="btn btn-round" disabled>▶</button>
+                            <button id="replay-btn" class="btn btn-round" disabled>↺</button>
+                        </div>
+                    </div>
+
+                    <button id="reveal-btn" class="btn btn-primary btn-large" disabled>Показать ответ 👁️</button>
+                </div>
+
+                <!-- Answer Card (Revealed) -->
+                <div id="answer-card" class="stage-card hidden">
+                    <div class="card-tag tag-success">ПРАВИЛЬНЫЙ ОТВЕТ</div>
+                    <div class="artist-photo-container">
+                        <img id="artist-photo" src="" alt="Artist Photo">
+                    </div>
+                    <h3 id="answer-text" class="answer-title">Исполнитель — Песня</h3>
+                    <div class="answer-actions">
+                        <button id="answer-replay-btn" class="btn btn-secondary">Повторить трек 🔊</button>
+                        <button id="next-track-btn" class="btn btn-primary">Следующий трек ➔</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Interactive Track Grid -->
+            <div class="grid-section">
+                <div class="grid-label">Сетка треков квиза</div>
+                <div id="tracks-grid" class="tracks-grid">
+                    <!-- 1, 2, 3... buttons -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Hidden HTML5 Audio Player -->
+    <audio id="audio-player" preload="auto"></audio>
+
+    <script src="app.js"></script>
+</body>
+</html>
