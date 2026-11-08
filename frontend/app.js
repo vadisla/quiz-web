@@ -1,7 +1,17 @@
 // Music Quiz Live - Frontend Logic
 
 // Configuration: API Base URL
-let API_URL = localStorage.getItem("quiz_api_url") || "http://localhost:8000";
+// Автоматическое переключение: localhost для локальной разработки или продакшен Railway
+const DEFAULT_PROD_API = "https://quiz-web-production.up.railway.app";
+let API_URL = localStorage.getItem("quiz_api_url");
+
+if (!API_URL) {
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        API_URL = "http://localhost:8000";
+    } else {
+        API_URL = DEFAULT_PROD_API;
+    }
+}
 
 // App State
 let currentQuiz = null;
@@ -49,16 +59,21 @@ async function checkApiConnection() {
     connectionBadge.className = "badge badge-warning";
     connectionBadge.textContent = "Проверка API...";
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
     try {
-        const res = await fetch(`${API_URL}/`);
+        const res = await fetch(`${API_URL}/api/health`, { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (res.ok) {
             connectionBadge.className = "badge badge-success";
             connectionBadge.textContent = "🟢 API Онлайн";
             loadQuizzes();
         } else {
-            throw new Error("API status not ok");
+            throw new Error(`API status ${res.status}`);
         }
     } catch (err) {
+        clearTimeout(timeoutId);
         connectionBadge.className = "badge badge-warning";
         connectionBadge.textContent = "🔴 Офлайн (нажмите ⚙️)";
         quizList.innerHTML = `
@@ -66,8 +81,9 @@ async function checkApiConnection() {
                 <p style="color: var(--danger); font-weight: 700;">Не удалось подключиться к API по адресу:</p>
                 <code style="background: #090d16; padding: 0.3rem 0.6rem; border-radius: 6px; display: inline-block; margin: 0.5rem 0;">${API_URL}</code>
                 <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
-                    Запустите локальный бэкенд на порту 8000 или настройте публичный адрес Railway в ⚙️
+                    Запустите локальный бэкенд на порту 8000 или настройте актуальный адрес Railway в ⚙️
                 </p>
+                <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="apiConfigBtn.click()">Открыть настройки ⚙️</button>
             </div>
         `;
     }
@@ -79,7 +95,7 @@ async function loadQuizzes() {
         const res = await fetch(`${API_URL}/api/quizzes`);
         const data = await res.json();
 
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             quizList.innerHTML = `<p style="grid-column: 1/-1; text-align: center;">В базе пока нет готовых квизов</p>`;
             return;
         }
@@ -110,6 +126,7 @@ async function loadQuizzes() {
 window.startQuiz = async function(quizId) {
     try {
         const res = await fetch(`${API_URL}/api/quizzes/${quizId}`);
+        if (!res.ok) throw new Error("Квиз не найден");
         currentQuiz = await res.json();
         playedTracks.clear();
 
@@ -127,6 +144,8 @@ window.startQuiz = async function(quizId) {
 // --- Render Bottom Track Grid ---
 function renderTracksGrid() {
     tracksGrid.innerHTML = "";
+    if (!currentQuiz || !currentQuiz.tracks) return;
+
     currentQuiz.tracks.forEach(track => {
         const btn = document.createElement("button");
         btn.className = "track-btn";
@@ -144,7 +163,8 @@ function renderTracksGrid() {
 
 function updateProgressDisplay() {
     if (!currentQuiz) return;
-    gameProgress.textContent = `Сыграно ${playedTracks.size} из ${currentQuiz.total_tracks}`;
+    const total = currentQuiz.total_tracks || currentQuiz.tracks.length;
+    gameProgress.textContent = `Сыграно ${playedTracks.size} из ${total}`;
 }
 
 // --- Select and Load Track ---
@@ -166,6 +186,7 @@ function selectTrack(index) {
 
     questionText.textContent = `Трек #${index}: ${trackData.question}`;
     audioPlayer.src = `${API_URL}${trackData.audio_url}`;
+    audioPlayer.load();
 
     // Enable buttons
     playPauseBtn.disabled = false;
@@ -182,7 +203,7 @@ function playAudio() {
         playPauseBtn.textContent = "❚❚";
         startTimer();
     }).catch(err => {
-        console.error("Ошибка воспроизведения:", err);
+        console.error("Ошибка воспроизведения аудио:", err);
     });
 }
 
@@ -195,7 +216,9 @@ function pauseAudio() {
 
 function stopAudio() {
     pauseAudio();
-    audioPlayer.currentTime = 0;
+    try {
+        audioPlayer.currentTime = 0;
+    } catch (e) {}
     resetTimer();
 }
 
@@ -208,9 +231,8 @@ function resetTimer() {
 function startTimer() {
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
-        if (!audioPlayer.duration) return;
-        const current = audioPlayer.currentTime;
-        const total = Math.min(audioPlayer.duration, 20); // 20-секундный отрезок
+        const current = audioPlayer.currentTime || 0;
+        const total = 20; // 20-секундный отрезок
 
         const remaining = Math.max(0, Math.ceil(total - current));
         timerCount.textContent = remaining;

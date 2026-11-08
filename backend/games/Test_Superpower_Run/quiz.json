@@ -1,0 +1,30 @@
+{
+  "id": "Test_Superpower_Run",
+  "name": "Test Superpower Run",
+  "difficulty": "легко",
+  "total_tracks": 2,
+  "tracks": [
+    {
+      "index": 1,
+      "artist": "Сплин",
+      "title": "Мы сидели и курили",
+      "question": "Назовите группу и название трека",
+      "answer": "Сплин — Мы сидели и курили",
+      "audio_url": "/api/quizzes/Test_Superpower_Run/audio/1",
+      "photo_url": "/api/quizzes/Test_Superpower_Run/photo/1",
+      "audio_file": "track1.mp3",
+      "photo_file": "photos/Сплин.jpg"
+    },
+    {
+      "index": 2,
+      "artist": "Queen",
+      "title": "Another One Bites The Dust",
+      "question": "Назовите группу и название трека",
+      "answer": "Queen — Another One Bites The Dust",
+      "audio_url": "/api/quizzes/Test_Superpower_Run/audio/2",
+      "photo_url": "/api/quizzes/Test_Superpower_Run/photo/2",
+      "audio_file": "track2.mp3",
+      "photo_file": "photos/Queen.jpg"
+    }
+  ]
+}
