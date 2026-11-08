@@ -2,7 +2,7 @@
 
 // Configuration: API Base URL
 // Автоматическое переключение: localhost для локальной разработки или продакшен Railway
-const DEFAULT_PROD_API = "https://quiz-web-production.up.railway.app";
+const DEFAULT_PROD_API = "https://backend-production-4042.up.railway.app";
 let API_URL = localStorage.getItem("quiz_api_url");
 
 if (!API_URL) {
